@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=77.0.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "zt-dsp-sv"
+version = "1.0.0"
+description = "ZT-DSP 1.0.1 server role: pair peers, then relay opaque bytes"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "AGPL-3.0-or-later"
+license-files = ["LICENSE"]
+dependencies = ["zt-dsp-py>=1.0.0"]
+
+[project.scripts]
+zt-dsp-server = "zt_dsp_sv_py.server:main"
+
+[tool.setuptools]
+# Flat layout: the project root is the package directory (zt_dsp_sv_py/pyproject.toml lives inside the package)
+packages = ["zt_dsp_sv_py"]
+package-dir = { "zt_dsp_sv_py" = "." }

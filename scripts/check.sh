@@ -126,7 +126,7 @@ fi
 
 echo '== 6. version contract =='
 vc=0
-for sym in FOLLOWS_DOC FOLLOWS_DOC_PATH APPLIES_TO_DOC_VERSIONS IMPLEMENTATION_ID; do
+for sym in FOLLOWS_DOC FOLLOWS_DOC_PATH DOCS_VERSION IMPLEMENTATION_ID; do
   if ! grep -q "pub const $sym" src/version.rs; then
     bad "version contract missing: $sym"
     vc=$((vc + 1))
@@ -184,6 +184,18 @@ else
     note 'version wiring carries the document revision (nothing built yet)'
   else
     bad 'version banner has no document revision'
+  fi
+fi
+echo '== 10. python server tests =='
+if ! command -v python3 >/dev/null 2>&1; then
+  bad 'python3 not on PATH: the Python server tests cannot run'
+elif ! python3 -c 'import pytest, zt_dsp_py' 2>/dev/null; then
+  bad 'pytest or zt-dsp-py not importable: install zt-dsp-py (from the client repository) first'
+else
+  if python3 -m pytest zt_dsp_sv_py/tests -q >/dev/null 2>&1; then
+    note 'zt_dsp_sv_py tests pass'
+  else
+    bad 'zt_dsp_sv_py tests failed'
   fi
 fi
 echo

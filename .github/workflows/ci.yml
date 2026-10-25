@@ -151,3 +151,64 @@ jobs:
           # runs the real binary, which the fallback branch of check.sh
           # item 9 cannot do.
           echo "$OUT" | grep -q '(docs '
+
+  python:
+    name: Python server implementation
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0  # v7.1.0
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      # zt_dsp_sv_py depends on zt-dsp-py, which lives in the client repository
+      # and is not on PyPI, so the dependency is installed straight from there.
+      # The commit is pinned so a client-side change cannot break this gate
+      # silently. The SHA moves only by hand: when the client's main advances
+      # and the new commit should be picked up, replace it in both jobs below.
+      - name: Install the zt-dsp-py dependency from the client repository
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install "zt-dsp-py @ git+https://github.com/ZT-DSP-Suite/ZT-DSP-client@b41307802b2f7165f6a5bc9379c5990e0ffcfe05#subdirectory=zt_dsp_py"
+
+      - name: Server tests
+        run: python -m pytest zt_dsp_sv_py/tests -q
+
+      - name: Version contract
+        run: |
+          OUT=$(python -m zt_dsp_sv_py --version)
+          echo "$OUT"
+          echo "$OUT" | grep -q 'ZT-DSP_SV-1.0.0'
+          echo "$OUT" | grep -qF '(docs 1.0.2)'
+
+  package:
+    name: Python package build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0  # v7.1.0
+        with:
+          python-version: "3.12"
+
+      - name: Build the wheel and sdist
+        run: |
+          python -m pip install --upgrade pip build
+          python -m build zt_dsp_sv_py --outdir dist
+
+      # The wheel declares zt-dsp-py as a dependency, but that name does not
+      # exist on PyPI: the package lives in the client repository. The
+      # dependency is installed from that repository first, then the wheel is
+      # installed with --no-deps so the resolver never goes looking for
+      # zt-dsp-py on the index.
+      - name: Install the zt-dsp-py dependency from the client repository
+        run: python -m pip install "zt-dsp-py @ git+https://github.com/ZT-DSP-Suite/ZT-DSP-client@b41307802b2f7165f6a5bc9379c5990e0ffcfe05#subdirectory=zt_dsp_py"
+
+      - name: Verify the wheel installs and runs
+        run: |
+          python -m pip install --no-deps dist/*.whl
+          python -c "import zt_dsp_sv_py"
+          zt-dsp-server --version

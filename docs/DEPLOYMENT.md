@@ -19,6 +19,20 @@ cargo build --release --target x86_64-unknown-linux-gnu
 
 `.cargo/config.toml` wires `x86_64-linux-gnu-gcc` as the linker for that target.
 
+### 1.1 Python implementation
+
+The same server role also ships in Python under `zt_dsp_sv_py/`. Its dependency
+`zt-dsp-py` lives in the client repository and is not on PyPI, so it installs by
+git URL first (pin a client commit in place of the placeholder):
+
+```bash
+pip install "zt-dsp-py @ git+https://github.com/ZT-DSP-Suite/ZT-DSP-client@<client commit>#subdirectory=zt_dsp_py"
+pip install -e ./zt_dsp_sv_py
+```
+
+Run it with `python -m zt_dsp_sv_py` (or the installed `zt-dsp-server` entry point);
+`--version` prints `ZT-DSP_SV-1.0.0 (docs 1.0.2)`.
+
 ## 2. Minimal run
 
 ```bash

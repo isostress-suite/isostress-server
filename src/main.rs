@@ -187,7 +187,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         code = version::CODE_VERSION,
         doc = version::FOLLOWS_DOC,
         doc_path = version::FOLLOWS_DOC_PATH,
-        applies_to = ?version::APPLIES_TO_DOC_VERSIONS,
         clients = ?version::CLIENT_VERSIONS,
         servers = ?version::SERVER_VERSIONS,
         "version contract"

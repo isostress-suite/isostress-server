@@ -4,11 +4,13 @@
 > silent drop) is implemented in Rust and verified against the ZT-DSP 1.0.1 wire
 > specification. The L4 extensions (offline delivery, groups, identity directory)
 > are implemented on a **separate control plane** that does not touch the wire format.
+> The same server role also ships as a Python implementation in
+> [`zt_dsp_sv_py/`](zt_dsp_sv_py/README.md).
 
 | | |
 |---|---|
 | **Protocol** | [ZT-DSP 1.0.1](https://github.com/ZT-DSP-Suite/ZT-DSP-docs) |
-| **Language** | Rust (edition 2021, MSRV 1.80) |
+| **Language** | Rust (edition 2021, MSRV 1.80); the server role also ships in Python (>= 3.10) under `zt_dsp_sv_py/` |
 | **Binaries** | single-file, static, `aarch64` + `x86_64` |
 | **Runtime deps** | none (no database, no message broker, no TLS terminator) |
 | **License** | AGPL-3.0-or-later **or** commercial — see below |
@@ -110,6 +112,7 @@ src/
                  util.rs       hex and constant-time helpers
 tests/           integration.rs (runs under cargo test) plus two manual scripts
 docs/            architecture, conformance, control API, threat model, deployment
+zt_dsp_sv_py/    Python implementation of the same server role (pytest suite inside)
 ```
 
 ## Security

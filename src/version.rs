@@ -4,12 +4,9 @@
 /// 代码侧双向声明：本实现所遵循的文档。
 pub const FOLLOWS_DOC: &str = "ZT-DSP Protocol Master Guide";
 
-/// 代码侧双向声明：所遵循文档的路径。
+/// 代码侧声明：所遵循文档的路径。
 // 注意：该路径指向**同级仓库** ZT-DSP-docs，在本仓库内不可解析。
 pub const FOLLOWS_DOC_PATH: &str = "ZT-DSP-docs/en/spec/ZT-DSP-1.0.2-Master_Guide.md";
-
-/// 本实现适用的总指导版本（多对多，可多项）。
-pub const APPLIES_TO_DOC_VERSIONS: &[&str] = &["1.0.0", "1.0.1", "1.0.2"];
 
 /// 总指导版本号（仅用于文档修订计数，不参与网络通信）。
 pub const DOCS_VERSION: &str = "1.0.2";
@@ -54,8 +51,7 @@ mod tests {
     fn bidirectional_declaration_is_present() {
         assert!(!FOLLOWS_DOC.is_empty());
         assert!(FOLLOWS_DOC_PATH.contains("ZT-DSP-docs"));
-        assert!(!APPLIES_TO_DOC_VERSIONS.is_empty());
-        assert!(APPLIES_TO_DOC_VERSIONS.contains(&DOCS_VERSION));
+        assert!(!DOCS_VERSION.is_empty());
     }
 
     /// 复用 client 仓的共享一致性向量。

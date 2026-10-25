@@ -3,12 +3,13 @@
 > **Status: implementation landed.** The data plane — frame parsing, lobby pairing,
 > silent drop, byte relay — is implemented in Rust against ZT-DSP 1.0.1 and verified.
 > The L4 extensions (offline delivery, groups, identity directory) run on a **separate
-> control plane** that does not touch the wire format.
+> control plane** that does not touch the wire format. The same server role also ships
+> as a Python implementation in [`zt_dsp_sv_py/`](../zt_dsp_sv_py/README.md).
 
 | | |
 |---|---|
 | Specification | ZT-DSP Master Guide 1.0.1 |
-| Language | Rust (edition 2021, MSRV 1.80) |
+| Language | Rust (edition 2021, MSRV 1.80); the server role also ships in Python (>= 3.10) under `zt_dsp_sv_py/` |
 | Artifact | single static binary, `aarch64` / `x86_64` |
 | Runtime deps | none (no database, no broker, no TLS terminator) |
 | Server version | `ZT-DSP_SV-1.0.0` |
@@ -148,6 +149,7 @@ src/
                  util.rs       hex and constant-time helpers
 tests/           integration.rs (runs under cargo test) plus two manual scripts
 docs/            architecture, conformance, control API, threat model, deployment
+zt_dsp_sv_py/    Python implementation of the same server role (pytest suite inside)
 ```
 
 ## Version applicability (many-to-many)
@@ -157,7 +159,7 @@ Guide versions and implementation versions are **not** one-to-one:
 | Relation | Rule |
 |---|---|
 | One guide → many implementations | Shared declaration while protocol behaviour is unchanged |
-| Many guides → one implementation | List each in `APPLIES_TO_DOC_VERSIONS` |
+| Many guides → one implementation | Not declared: each implementation carries one development baseline (`FOLLOWS_DOC`) |
 | Same number, different implementation | Equal numbers do not imply equal behaviour or compatibility |
 | Compatibility judgement | Always decided by the phase-3 confirmation tag check |
 

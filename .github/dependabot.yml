@@ -1,7 +1,9 @@
 # Keep dependencies patched.
 #
-# This repository currently carries no build dependencies; it is a placeholder.
-# The entry is kept so the workflow file is covered if one is added.
+# The github-actions entry covers the workflow file. The pip entry covers the
+# Python package under zt_dsp_sv_py/: its build backend and the test tooling.
+# The zt-dsp-py dependency is a git URL into the client repository, which
+# Dependabot does not resolve; that pin moves by hand (see ci.yml).
 #
 # Version-update proposals are off (open-pull-requests-limit: 0): the weekly
 # proposals kept arriving as pull requests, and robot pull requests are not
@@ -17,3 +19,10 @@ updates:
       interval: weekly
     open-pull-requests-limit: 0
     labels: [dependencies, ci]
+
+  - package-ecosystem: pip
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 0
+    labels: [dependencies]

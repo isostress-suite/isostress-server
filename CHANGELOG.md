@@ -12,6 +12,17 @@ governing change history is `git log`. If the two ever disagree, `git log` wins.
 
 ### Added
 
+- **Server implementation (Python).** `zt_dsp_sv_py/` — the server role in Python:
+  frame relay, lobby pairing, silent drop, profile tiers — imported from
+  `ZT-DSP-client` @ `b413078`, where it had landed by mistake: the server role
+  belongs in this repository. It depends on `zt-dsp-py`, installed from the client
+  repository by git URL because the package is not on PyPI.
+- **CI for the Python implementation.** A `python` job (ubuntu-latest, 3.10–3.14)
+  runs the pytest suite and asserts the `--version` contract; a `package` job
+  builds the wheel/sdist and smoke-tests an install. The `zt-dsp-py` dependency is
+  pinned to a client commit and moves only by hand.
+- **A tenth check** in `scripts/check.sh`: the Python server test suite runs there
+  too, so the repository guard covers both implementations.
 - **Server implementation (Rust).** Data plane implementing ZT-DSP 1.0.1:
   - Appendix F.1 phase-1 frame parsing with F.6 length limits enforced before allocation.
   - Appendix F.2 strict silent drop: no bytes written, no active close, 8192-byte drain,
@@ -29,6 +40,13 @@ governing change history is `git log`. If the two ever disagree, `git log` wins.
 
 ### Changed
 
+- **The version contract declares one development baseline.** `APPLIES_TO_DOC_VERSIONS`
+  is gone from `src/version.rs` and from the imported `zt_dsp_sv_py/version.py`
+  (which also drops its `DOCS_VERSIONS` / `DOCUMENT_REVISION` shape); the followed
+  document is stated by `FOLLOWS_DOC` / `FOLLOWS_DOC_PATH` / `DOCS_VERSION`, and the
+  client/server pairing tables (`CLIENT_VERSIONS` / `SERVER_VERSIONS`) stay. Per the
+  2026-10-25 ruling: no multi-guide compatibility is declared before release.
+  `check.sh` item 6 now pins `DOCS_VERSION` instead of the removed list.
 - **`--version` and the startup banner come from one source.** clap receives the
   same composed string the banner prints, so the two exits cannot disagree. The
   output carries the document revision, e.g. `ZT-DSP_SV-1.0.0 (docs 1.0.2)`.
