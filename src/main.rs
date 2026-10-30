@@ -151,6 +151,30 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .with_writer(std::io::stderr)
         .init();
 
+    // 停机信号尽早注册，不要等到 accept 循环跟前。
+    //
+    // term_signal() 是普通函数：unix::signal 在被调用的那一刻就装上处理器。装得
+    // 太晚的话，SIGTERM 落在装好之前会被默认动作直接杀死进程（退出码 143），
+    // 优雅停机根本没机会发生。
+    //
+    // ctrl_c 不一样：它是 async fn，Box::pin 只是搭好 future，不注册任何东西，
+    // 处理器要等 select! 第一次轮询才装上。所以「监听端口已打开」只对 SIGTERM
+    // 蕴含「处理器已就位」，SIGINT 还差一次轮询。实测这个间隔很短（进程起来
+    // 30 毫秒后两个信号都已在 SigCgt 里），但注释不该替 ctrl_c 打包票。要让它
+    // 同样立刻生效，换成 unix::signal(SignalKind::interrupt()) 即可，与
+    // term_signal 对称。
+    //
+    // Both signals are registered as early as possible, not merely before the
+    // accept loop. term_signal() is an ordinary function: unix::signal installs
+    // the handler the moment it is called. ctrl_c is an async fn, so Box::pin
+    // only builds the future; the handler is installed on the first poll inside
+    // select!. The gap is short -- both signals appear in SigCgt 30 ms after
+    // start -- but "the port is open" therefore implies "the handler is in
+    // place" only for SIGTERM. Swapping ctrl_c for
+    // unix::signal(SignalKind::interrupt()) would make the two symmetric.
+    let mut term = term_signal();
+    let mut ctrl_c = Box::pin(tokio::signal::ctrl_c());
+
     // clap default --version prints only the implementation id, while the
     // startup banner prints the composed form, which also carries the
     // document revision. Hand clap the same composed string so the two
@@ -218,6 +242,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let offline = Arc::new(OfflineStore::new(cfg.offline.clone()));
     let groups = Arc::new(Groups::new(cfg.group.clone()));
     let directory = Arc::new(Directory::new(cfg.directory.clone()));
+    // 控制面连接数由 main 持有，停机时与数据面连接数一并报出。
+    let control_live = Arc::new(std::sync::atomic::AtomicUsize::new(0));
 
     let shared = Arc::new(Shared {
         cfg: cfg.clone(),
@@ -236,6 +262,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             groups: Arc::clone(&groups),
             directory: Arc::clone(&directory),
             metrics: Arc::clone(&metrics),
+            live_conns: Arc::clone(&control_live),
             token,
         });
         tokio::spawn(async move {
@@ -281,8 +308,25 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let listener = TcpListener::bind(cfg.listen).await?;
     info!(addr = %cfg.listen, "data plane listening");
 
+    // 收到 SIGTERM（systemd 的停止信号）或 SIGINT 后停止接受新连接，再给在途
+    // 连接一个宽限窗口。没有这一步，`systemctl stop` 与 SIGKILL 无异：所有会话
+    // 在同一瞬间硬断，日志里也不会留下「服务正在停止」这一行。
+    // 处理器在 main 开头就注册好了（见上），这里只是等它到来。
     loop {
-        let (stream, peer) = match listener.accept().await {
+        let accepted = tokio::select! {
+            r = listener.accept() => Some(r),
+            _ = wait_for_sigterm(&mut term) => {
+                info!("收到 SIGTERM，停止接受新连接");
+                None
+            }
+            _ = &mut ctrl_c => {
+                info!("收到 SIGINT，停止接受新连接");
+                None
+            }
+        };
+        let Some(accepted) = accepted else { break };
+
+        let (stream, peer) = match accepted {
             Ok(v) => v,
             Err(err) => {
                 // 不退避的话，EMFILE 之类的瞬时错误会变成满速重试
@@ -320,6 +364,55 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             handle_conn(stream, peer, shared_state).await;
         });
     }
+
+    // 宽限：等在途连接自己收尾，最多 SHUTDOWN_GRACE。
+    //
+    // 只等数据面连接：中继会话有明确的终点（对端发完就结束），而控制面连接是
+    // 长连，空闲时要等读超时才关，在宽限窗口内通常不会自己结束。等它没有意义。
+    let deadline = tokio::time::Instant::now() + SHUTDOWN_GRACE;
+    while tokio::time::Instant::now() < deadline {
+        if shared.metrics.active_conns.load(Ordering::Relaxed) == 0 {
+            break;
+        }
+        tokio::time::sleep(Duration::from_millis(50)).await;
+    }
+    let data_plane = shared.metrics.active_conns.load(Ordering::Relaxed);
+    let control_plane = control_live.load(Ordering::Relaxed);
+    if data_plane == 0 && control_plane == 0 {
+        info!("shutdown complete, no connections were open");
+    } else {
+        warn!(
+            data_plane,
+            control_plane, "shutdown grace expired, closing the remaining connections"
+        );
+    }
+    Ok(())
+}
+
+/// 停机宽限：停止接受新连接后，等在途连接收尾的最长时间。
+const SHUTDOWN_GRACE: Duration = Duration::from_secs(5);
+
+#[cfg(unix)]
+fn term_signal() -> Option<tokio::signal::unix::Signal> {
+    tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate()).ok()
+}
+
+#[cfg(unix)]
+async fn wait_for_sigterm(sig: &mut Option<tokio::signal::unix::Signal>) {
+    match sig {
+        Some(s) => {
+            s.recv().await;
+        }
+        None => std::future::pending::<()>().await,
+    }
+}
+
+#[cfg(not(unix))]
+fn term_signal() {}
+
+#[cfg(not(unix))]
+async fn wait_for_sigterm(_: &mut ()) {
+    std::future::pending::<()>().await
 }
 
 async fn handle_conn(mut stream: TcpStream, peer: SocketAddr, shared: Arc<Shared>) {

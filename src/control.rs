@@ -37,6 +37,8 @@ pub struct ControlState {
     pub groups: Arc<Groups>,
     pub directory: Arc<Directory>,
     pub metrics: Arc<Metrics>,
+    /// 当前存活的控制面连接数。停机时与数据面连接数一并报出。
+    pub live_conns: Arc<AtomicUsize>,
     /// 必填：没有口令就不启动控制面
     pub token: String,
 }
@@ -179,7 +181,8 @@ async fn read_line_limited<R: AsyncBufRead + Unpin>(
 pub async fn serve(addr: SocketAddr, state: Arc<ControlState>) -> std::io::Result<()> {
     let listener = TcpListener::bind(addr).await?;
     info!(%addr, "控制面已监听（需要口令）");
-    let live = Arc::new(AtomicUsize::new(0));
+    // 计数由调用方持有：停机时要把控制面连接数与数据面连接数一并报出。
+    let live = Arc::clone(&state.live_conns);
 
     loop {
         let (stream, peer) = match listener.accept().await {
