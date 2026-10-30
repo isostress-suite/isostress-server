@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-// Copyright (c) 2026 ZT-DSP Suite contributors
+// Copyright (c) 2026 isostress Suite maintainers
 
 use super::*;
 use crate::metrics::Metrics;

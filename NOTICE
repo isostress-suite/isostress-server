@@ -1,5 +1,8 @@
-ZT-DSP relay server
-Copyright (c) 2026 ZT-DSP Suite maintainers (copyright holder: SCAL-ROAM)
+isostress relay server
+Copyright (c) 2026 isostress Suite maintainers
+
+Correspondence (licensing, copyright notices, and security reports):
+https://github.com/isostress-suite/isostress-docs/issues
 
 Licensed under the GNU Affero General Public License, version 3 or later.
 Full text: LICENSE.

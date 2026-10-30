@@ -3,8 +3,8 @@
 Maps each normative requirement the server must satisfy onto the code that satisfies it.
 Every row should be checkable by reading the cited file.
 
-Reference: **ZT-DSP 1.0.2**, `cn/spec/ZT-DSP-1.0.2-总指导.md`
-(English mirror: `en/spec/ZT-DSP-1.0.2-Master_Guide.md`).
+Reference: **isostress 1.0.0**, `cn/spec/isostress-1.0.0-总指导.md`
+(English mirror: `en/spec/isostress-1.0.0-Master_Guide.md`).
 
 ---
 

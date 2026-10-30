@@ -1,13 +1,13 @@
-# ZT-DSP Server
+# isostress Server
 
 > **Status: implementation landed.** The data plane (frame relay, lobby pairing,
-> silent drop) is implemented in Rust and verified against the ZT-DSP 1.0.1 wire
+> silent drop) is implemented in Rust and verified against the isostress 1.0.0 wire
 > specification. The L4 extensions (offline delivery, groups, identity directory)
 > are implemented on a **separate control plane** that does not touch the wire format.
 
 | | |
 |---|---|
-| **Protocol** | [ZT-DSP 1.0.1](https://github.com/ZT-DSP-Suite/ZT-DSP-docs) |
+| **Protocol** | [isostress 1.0.0](https://github.com/isostress-suite/isostress-docs) |
 | **Language** | Rust (edition 2021, MSRV 1.80) |
 | **Binaries** | single-file, static, `aarch64` + `x86_64` |
 | **Runtime deps** | none (no database, no message broker, no TLS terminator) |
@@ -15,11 +15,11 @@
 
 ## What this is
 
-A relay server for ZT-DSP peers. It introduces one role: **front desk**.
+A relay server for isostress peers. It introduces one role: **front desk**.
 
 ```
 Peer A ──┐                                  ┌── Peer B
-         ├──── ZT-DSP server (this repo) ────┤
+         ├──── isostress server (this repo) ────┤
 Peer C ──┘      pairing + byte relay          └── Peer D
                server never decrypts
 ```
@@ -57,19 +57,21 @@ extension.
 
 ```bash
 cargo build --release
-./target/release/zt-dsp-server --listen 0.0.0.0:7443
+./target/release/isostress-server --listen 0.0.0.0:7443
 ```
 
 With the control plane enabled (the token is mandatory — the process refuses to start
 without it):
 
 ```bash
-./target/release/zt-dsp-server \
+./target/release/isostress-server \
   --listen 0.0.0.0:7443 \
-  --control 127.0.0.1:7444 \
+  --control 127.0.0.1:<port> \
   --control-token "$(head -c 32 /dev/urandom | base64)" \
   --profile advanced
 ```
+
+`<port>` is chosen by the deployment or the implementation default; the example value is not a convention.
 
 Cross-compiling from aarch64 to x86_64:
 

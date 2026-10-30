@@ -1,10 +1,10 @@
 # Contributing
 
-Thanks for your interest. This repository is the server edition of ZT-DSP.
+Thanks for your interest. This repository is the server edition of isostress.
 
 ## Before you start
 
-- Read the [ZT-DSP master guide](https://github.com/ZT-DSP-Suite/ZT-DSP-docs). The server
+- Read the [isostress master guide](https://github.com/isostress-suite/isostress-docs). The server
   implements the wire specification; changes that contradict it will not be merged.
 - Read [`docs/PROTOCOL-CONFORMANCE.md`](docs/PROTOCOL-CONFORMANCE.md) to see which
   specification sections are already covered.
@@ -45,7 +45,7 @@ that waits over a weekday is waiting for a person, not rejected.
 ## What we will not merge
 
 - Any change that makes the server decrypt, or hold, session material.
-- Any change that adds a frame type or control frame to the ZT-DSP wire format. The format
+- Any change that adds a frame type or control frame to the isostress wire format. The format
   has no type field; adding one breaks every existing client.
 - Any change that lets a probe distinguish a rejected handshake from a closed port.
 - Any change that logs token hashes, session identifiers, or payload bytes.
@@ -61,7 +61,7 @@ Contributions require CLA sign-off. The pull request description carries one lin
 
 ```rust
 // SPDX-License-Identifier: AGPL-3.0-or-later
-// Copyright (c) 2026 ZT-DSP Suite contributors
+// Copyright (c) 2026 isostress Suite maintainers
 ```
 
 Code is dual-licensed AGPL-3.0-or-later / commercial; see [`LICENSING.md`](LICENSING.md).

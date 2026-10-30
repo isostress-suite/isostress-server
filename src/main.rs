@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-// Copyright (c) 2026 ZT-DSP Suite contributors
+// Copyright (c) 2026 isostress Suite maintainers
 
-//! ZT-DSP 服务端：登记 → 配对 → 中继，全程不解密。
+//! isostress 服务端：登记 → 配对 → 中继，全程不解密。
 //!
 //! 每个协议面一个模块：附录 F 的帧解析、等候池配对、静默丢弃、字节中继、
 //! 附录 B.2 三档配置、L4 存储、控制面各自分离；模块边界与可见性和合并前一致。
 
 /// 版本契约（单一事实来源）。
 ///
-/// 与 `zt_dsp_py/version.py`、`zt_dsp_rs/version.rs` 保持同一套声明形状，
+/// 与 `isostress_py/version.py`、`isostress_rs/version.rs` 保持同一套声明形状，
 /// 差别只在角色前缀：客户端是语言前缀（PY/RS），服务端是角色前缀（SV）。
 ///
 /// 握手帧**不携带任何版本串**：阶段一参数 JSON 与阶段四 AAD 都不含版本或协议标识字段。
@@ -86,9 +86,9 @@ impl From<ProfileArg> for Profile {
 
 #[derive(Parser, Debug)]
 #[command(
-    name = "zt-dsp-server",
+    name = "isostress-server",
     version = version::IMPLEMENTATION_ID,
-    about = "ZT-DSP relay server"
+    about = "isostress relay server"
 )]
 struct Args {
     #[arg(long)]
@@ -99,7 +99,7 @@ struct Args {
     profile: ProfileArg,
     #[arg(long)]
     config: Option<PathBuf>,
-    #[arg(long, env = "ZT_DSP_CONTROL_TOKEN")]
+    #[arg(long, env = "ISOSTRESS_CONTROL_TOKEN")]
     control_token: Option<String>,
     #[arg(long)]
     dump_config: bool,
@@ -189,11 +189,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
 
-    eprintln!("ZT-DSP · {}", version::format_version());
+    eprintln!("isostress · {}", version::format_version());
     debug!(
         role = version::ROLE,
         prefix = version::ROLE_PREFIX,
         code = version::CODE_VERSION,
+        release = version::IMPLEMENTATION_ID,
+        build = version::BUILD_ID,
         doc = version::FOLLOWS_DOC,
         doc_path = version::FOLLOWS_DOC_PATH,
         applies_to = ?version::APPLIES_TO_DOC_VERSIONS,
@@ -206,7 +208,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         listen = %cfg.listen,
         control = ?cfg.control_listen,
         directory = cfg.directory.enabled,
-        "starting ZT-DSP relay (no decryption)"
+        "starting isostress relay (no decryption)"
     );
     if cfg.directory.enabled {
         warn!(

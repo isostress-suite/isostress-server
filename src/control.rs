@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-// Copyright (c) 2026 ZT-DSP Suite contributors
+// Copyright (c) 2026 isostress Suite maintainers
 
 //! L4 控制面：JSON Lines over TCP。
 //!
-//! 与数据面完全隔离，不碰 ZT-DSP 线上帧。**默认关闭**，且启用时强制要求口令。
+//! 与数据面完全隔离，不碰 isostress 线上帧。**默认关闭**，且启用时强制要求口令。
 //!
 //! 访问控制只有口令校验，没有按令牌的身份绑定 —— 因此本控制面按设计仅供
 //! 运营者自己使用（运维脚本、管理端的账号体系在外层）。

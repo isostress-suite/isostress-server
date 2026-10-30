@@ -1,25 +1,25 @@
-# ZT-DSP 服务器版
+# isostress 服务器版
 
-> **状态：实现已落地。** 数据面（帧解析、等候池配对、静默丢弃、字节中继）已按 ZT-DSP 1.0.1
+> **状态：实现已落地。** 数据面（帧解析、等候池配对、静默丢弃、字节中继）已按 isostress 1.0.0
 > 线上规范用 Rust 实现并验证。L4 扩展（离线投递、群组、身份目录）实现在**独立控制面**上，
 > 不触碰线上帧格式。
 
 | 项 | 值 |
 |---|---|
-| 适用规范 | 《ZT-DSP 协议总指导》1.0.1 |
+| 适用规范 | 《isostress 协议总指导》1.0.0 |
 | 语言 | Rust（edition 2021，MSRV 1.80） |
 | 产物 | 单文件静态二进制，`aarch64` / `x86_64` 双架构 |
 | 运行时依赖 | 无（不需要数据库、消息队列、TLS 终结器） |
-| 服务端版本 | `ZT-DSP_SV-1.0.0` |
+| 服务端版本 | `ISOSTRESS_SV-1.0.0-20261030` |
 | 许可 | AGPL-3.0-or-later **或** 商业授权 |
 
 ## 这是什么
 
-给 ZT-DSP 客户端做中继的服务器。它只增加一个角色：**酒店前台**。
+给 isostress 客户端做中继的服务器。它只增加一个角色：**酒店前台**。
 
 ```
 对端 A ──┐                                   ┌── 对端 B
-         ├──── ZT-DSP 服务端（本仓库）────────┤
+         ├──── isostress 服务端（本仓库）────────┤
 对端 C ──┘        配对 + 字节中继            └── 对端 D
                   服务器全程不解密
 ```
@@ -63,18 +63,20 @@
 
 ```bash
 cargo build --release
-./target/release/zt-dsp-server --listen 0.0.0.0:7443
+./target/release/isostress-server --listen 0.0.0.0:7443
 ```
 
 带控制面（生产建议，并且务必设 token）：
 
 ```bash
-./target/release/zt-dsp-server \
+./target/release/isostress-server \
   --listen 0.0.0.0:7443 \
-  --control 127.0.0.1:7444 \
+  --control 127.0.0.1:<port> \
   --control-token "$(head -c 32 /dev/urandom | base64)" \
   --profile advanced
 ```
+
+`<port>` 由部署方或实现默认值决定，示例值不构成约定。
 
 ## 配置档位（附录 B.2）
 
@@ -121,7 +123,7 @@ cargo build --release
 
 完整的操作者能力边界见 [`../docs/THREAT-MODEL.md`](../docs/THREAT-MODEL.md)。
 
-## 目录
+## 这里有什么
 
 ```
 src/
@@ -139,6 +141,13 @@ src/
 tests/           integration.rs（随 cargo test 运行）+ 两个手动验收脚本
 docs/            架构、一致性、控制面、威胁模型、部署
 ```
+
+## 按什么找
+
+- 协议对照：`docs/PROTOCOL-CONFORMANCE.md`
+- 部署与运行：`docs/DEPLOYMENT.md`
+- 模块划分：`docs/ARCHITECTURE.md`
+- 控制面：`docs/CONTROL-API.md`
 
 ## 适用关系（多对多）
 

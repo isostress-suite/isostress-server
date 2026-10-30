@@ -115,7 +115,7 @@ jobs:
 
       - name: Assert the binary really is ${{ matrix.machine }}
         run: |
-          BIN=target/${{ matrix.target }}/release/zt-dsp-server
+          BIN=target/${{ matrix.target }}/release/isostress-server
           test -x "$BIN" || { echo "missing $BIN"; exit 1; }
           ls -l "$BIN"
           readelf -h "$BIN" | grep Machine
@@ -127,7 +127,7 @@ jobs:
 
       - name: Version contract
         run: |
-          BIN=target/${{ matrix.target }}/release/zt-dsp-server
+          BIN=target/${{ matrix.target }}/release/isostress-server
           # The aarch64 binary cannot run natively on an x86_64 runner, so it
           # runs under qemu there. Either way the binary is executed, not
           # grepped.
@@ -145,7 +145,7 @@ jobs:
             OUT=$("$BIN" --version)
           fi
           echo "$OUT"
-          echo "$OUT" | grep -q 'ZT-DSP_SV-1.0.0'
+          echo "$OUT" | grep -q 'ISOSTRESS_SV-1.0.0'
           # The revision suffix is part of the version contract: --version
           # prints the same composed string the startup banner prints. Running
           # the real binary is the direct proof.

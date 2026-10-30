@@ -1,26 +1,26 @@
-# ZT-DSP Server
+# isostress Server
 
 > **Status: implementation landed.** The data plane — frame parsing, lobby pairing,
-> silent drop, byte relay — is implemented in Rust against ZT-DSP 1.0.1 and verified.
+> silent drop, byte relay — is implemented in Rust against isostress 1.0.0 and verified.
 > The L4 extensions (offline delivery, groups, identity directory) run on a **separate
 > control plane** that does not touch the wire format.
 
 | | |
 |---|---|
-| Specification | ZT-DSP Master Guide 1.0.1 |
+| Specification | isostress Master Guide 1.0.0 |
 | Language | Rust (edition 2021, MSRV 1.80) |
 | Artifact | single static binary, `aarch64` / `x86_64` |
 | Runtime deps | none (no database, no broker, no TLS terminator) |
-| Server version | `ZT-DSP_SV-1.0.0` |
+| Server version | `ISOSTRESS_SV-1.0.0-20261030` |
 | Licence | AGPL-3.0-or-later **or** commercial |
 
 ## What this is
 
-A relay server for ZT-DSP peers. It adds exactly one role: the **front desk**.
+A relay server for isostress peers. It adds exactly one role: the **front desk**.
 
 ```
 Peer A ──┐                                  ┌── Peer B
-         ├──── ZT-DSP server (this repo) ────┤
+         ├──── isostress server (this repo) ────┤
 Peer C ──┘      pairing + byte relay          └── Peer D
                server never decrypts
 ```
@@ -69,18 +69,20 @@ and stays interoperable with the client protocol.
 
 ```bash
 cargo build --release
-./target/release/zt-dsp-server --listen 0.0.0.0:7443
+./target/release/isostress-server --listen 0.0.0.0:7443
 ```
 
 With the control plane (recommended in production — always set a token):
 
 ```bash
-./target/release/zt-dsp-server \
+./target/release/isostress-server \
   --listen 0.0.0.0:7443 \
-  --control 127.0.0.1:7444 \
+  --control 127.0.0.1:<port> \
   --control-token "$(head -c 32 /dev/urandom | base64)" \
   --profile advanced
 ```
+
+`<port>` is chosen by the deployment or the implementation default; the example value is not a convention.
 
 ## Profiles (Appendix B.2)
 
@@ -149,6 +151,13 @@ src/
 tests/           integration.rs (runs under cargo test) plus two manual scripts
 docs/            architecture, conformance, control API, threat model, deployment
 ```
+
+## Documents
+
+- Protocol mapping: `docs/PROTOCOL-CONFORMANCE.md`
+- Build and run: `docs/DEPLOYMENT.md`
+- Module map: `docs/ARCHITECTURE.md`
+- Control plane: `docs/CONTROL-API.md`
 
 ## Version applicability (many-to-many)
 

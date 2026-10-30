@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-// Copyright (c) 2026 ZT-DSP Suite contributors
+// Copyright (c) 2026 isostress Suite maintainers
 
 //! L4 扩展：离线消息 / 群组 / 身份目录。
 //!
-//! 这三项**不在 ZT-DSP 规范内**。它们走独立控制面（JSON Lines over TCP），
+//! 这三项**不在 isostress 规范内**。它们走独立控制面（JSON Lines over TCP），
 //! 因为附录 F 的线上帧没有帧类型字段，往数据面插帧会破坏客户端互操作。
 //!
 //! payload 一律是不透明字节：服务器不解密、不解析。

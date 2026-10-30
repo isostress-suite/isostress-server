@@ -1,15 +1,15 @@
 [package]
-name = "zt-dsp-server"
+name = "isostress-server"
 version = "1.0.0"
 edition = "2021"
 rust-version = "1.80"
-description = "ZT-DSP 1.0.1 server: pairing and byte relay; the server never decrypts"
+description = "isostress 1.0.0 server: pairing and byte relay; the server never decrypts"
 license = "AGPL-3.0-or-later"
-repository = "https://github.com/ZT-DSP-Suite/ZT-DSP-server"
+repository = "https://github.com/isostress-suite/isostress-server"
 readme = "README.md"
 
 [[bin]]
-name = "zt-dsp-server"
+name = "isostress-server"
 path = "src/main.rs"
 
 [dependencies]

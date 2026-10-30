@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (c) 2026 isostress Suite maintainers
 # 端到端验证：真实 TCP 连服务端，模拟两个客户端完成阶段一配对并互发数据。
 import socket, struct, subprocess, sys, time, os
 
@@ -25,7 +26,7 @@ def recvn(s, n, timeout=5):
     return buf
 
 PORT = 17443
-proc = subprocess.Popen(['./target/debug/zt-dsp-server', '--listen', f'127.0.0.1:{PORT}',
+proc = subprocess.Popen(['./target/debug/isostress-server', '--listen', f'127.0.0.1:{PORT}',
                          '--profile', 'beginner'], stderr=subprocess.PIPE)
 time.sleep(1.2)
 try:

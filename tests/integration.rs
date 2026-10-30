@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-// Copyright (c) 2026 ZT-DSP Suite contributors
+// Copyright (c) 2026 isostress Suite maintainers
 
 //! 端到端集成测试：真起一个服务端进程，两客户端完成阶段一配对并互发字节。
 //!
@@ -42,7 +42,7 @@ impl Drop for Server {
 }
 
 fn start_server(port: u16) -> Server {
-    let child = Command::new(env!("CARGO_BIN_EXE_zt-dsp-server"))
+    let child = Command::new(env!("CARGO_BIN_EXE_isostress-server"))
         .args(["--listen", &format!("127.0.0.1:{port}")])
         .stdout(Stdio::null())
         .stderr(Stdio::null())
@@ -125,7 +125,11 @@ fn rejects_malformed_phase1_without_answering() {
     match s.read(&mut buf) {
         Ok(0) => {} // 对端关闭，可接受
         Ok(n) => panic!("静默丢弃失败：服务器回了 {n} 字节"),
-        Err(e) if e.kind() == ErrorKind::WouldBlock || e.kind() == ErrorKind::TimedOut => {}
+        Err(e)
+            if e.kind() == ErrorKind::WouldBlock
+                || e.kind() == ErrorKind::TimedOut
+                || e.kind() == ErrorKind::ConnectionReset
+                || e.kind() == ErrorKind::ConnectionAborted => {}
         Err(e) => panic!("意外错误: {e}"),
     }
 }
@@ -133,7 +137,7 @@ fn rejects_malformed_phase1_without_answering() {
 #[test]
 fn refuses_to_start_control_plane_without_token() {
     let port = free_port();
-    let out = Command::new(env!("CARGO_BIN_EXE_zt-dsp-server"))
+    let out = Command::new(env!("CARGO_BIN_EXE_isostress-server"))
         .args([
             "--listen",
             &format!("127.0.0.1:{port}"),
@@ -147,21 +151,21 @@ fn refuses_to_start_control_plane_without_token() {
 
 /// 空口令不是「口令太弱」，而是「没有口令」：`ct_eq` 对两个空串返回真，
 /// 于是任何客户端都能用 `{"op":"auth","token":""}` 通过鉴权，控制面等于不设防。
-/// 命令行与 `ZT_DSP_CONTROL_TOKEN` 两条入口都必须拒绝。
+/// 命令行与 `ISOSTRESS_CONTROL_TOKEN` 两条入口都必须拒绝。
 #[test]
 fn refuses_to_start_control_plane_with_an_empty_token() {
     let port = free_port();
     let listen = format!("127.0.0.1:{port}");
 
     for source in ["flag", "env"] {
-        let mut cmd = Command::new(env!("CARGO_BIN_EXE_zt-dsp-server"));
+        let mut cmd = Command::new(env!("CARGO_BIN_EXE_isostress-server"));
         cmd.args(["--listen", &listen, "--control", "127.0.0.1:0"]);
         match source {
             "flag" => {
                 cmd.args(["--control-token", ""]);
             }
             _ => {
-                cmd.env("ZT_DSP_CONTROL_TOKEN", "");
+                cmd.env("ISOSTRESS_CONTROL_TOKEN", "");
             }
         }
         let out = cmd.output().expect("run server");

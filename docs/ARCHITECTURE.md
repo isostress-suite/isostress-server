@@ -5,13 +5,13 @@ see the upstream specification; this repository implements it.
 
 ## 1. Role model
 
-ZT-DSP has three roles. This repository implements exactly one of them.
+isostress has three roles. This repository implements exactly one of them.
 
 | Role | Responsibility | In this repo |
 |---|---|---|
 | **TCA** | Issues and revokes identity tokens; publishes a CRL | No — separate authority |
 | **Server** | Pairs peers, relays opaque bytes | **Yes** |
-| **Client** | Runs the handshake, encrypts, encrypts again | No — see `ZT-DSP-client` |
+| **Client** | Runs the handshake, encrypts, encrypts again | No — see `isostress-client` |
 
 The server is deliberately *not* a participant in the key exchange. It forwards phase-1
 frames after reading the identity declaration, and from then on moves phases 2, 3 and 4
@@ -22,7 +22,7 @@ as opaque bytes. It never derives a session key.
 Peer A ─────────────────────────┐            ┌─────────────────────────  Peer B
                                 │            │
                         ┌───────▼────────────▼───────┐
-                        │  ZT-DSP server             │
+                        │  isostress server             │
                         │  reads: token hashes       │
                         │  reads: session id         │
                         │  never: pubkeys, tags,     │
@@ -113,7 +113,7 @@ The identity directory is additionally off in every profile, because it records 
 token hash appeared, which the specification forbids (line 979).
 
 ```
-data plane   :7443   ZT-DSP wire format      (spec-conformant)
+data plane   :7443   isostress wire format      (spec-conformant)
 control plane:7444   JSON Lines              (extension, loopback by default)
 ```
 

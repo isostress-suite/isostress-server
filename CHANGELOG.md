@@ -6,13 +6,20 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 **Note on authority:** this file is a convenience record, not the source of truth. The
-governing change history is `git log`. If the two ever disagree, `git log` wins.
+authoritative change history is `git log`. If the two ever disagree, `git log` wins.
 
 ## [Unreleased]
 
 ### Added
 
-- **Server implementation (Rust).** Data plane implementing ZT-DSP 1.0.1:
+- **isostress 1.0.0 specification additions (normative).** The 1.0.0 working tree adds a
+  normative resource bound to H.3 -- per held connection: hold duration, concurrent
+  held-connection count, and buffered-byte bound; the hold duration range is `(0, 15s]`
+  and the 15 s ceiling cannot be relaxed -- plus three matching `C.1` checklist items
+  that record those bound values. Both are new normative obligations for an
+  implementation. `C.1` also now matches §4.2.3 on sequence numbers: drop the packet
+  **and** terminate the session.
+- **Server implementation (Rust).** Data plane implementing isostress 1.0.0:
   - Appendix F.1 phase-1 frame parsing with F.6 length limits enforced before allocation.
   - Appendix F.2 strict silent drop: no bytes written, no active close, 8192-byte drain,
     diagnostics on stderr only, indistinguishable from a closed port.
@@ -29,15 +36,31 @@ governing change history is `git log`. If the two ever disagree, `git log` wins.
 
 ### Changed
 
+- **Control-plane token and service account renamed.** The control-plane token
+  environment variable is now `ISOSTRESS_CONTROL_TOKEN`, and the example systemd
+  unit runs as the `isostress` user and group. Deployments that export the retired
+  variable or use the old account must migrate before upgrading.
+- **Project renamed to isostress (ISTS); numbering reset.** The retired name is gone
+  from modules, packages, identifiers and prose: `isostress_py` / `isostress_rs` /
+  `isostress_sv_py`, packages `isostress-py` / `isostress-rs`, identifiers
+  `ISOSTRESS_PY` / `ISOSTRESS_RS` / `ISOSTRESS_SV`. The ten KDF context strings carry
+  the `ISOSTRESS-` prefix, so every derived key changes and the shared vectors were
+  regenerated. Numbering restarts at 1.0.0 on 2026-10-29: development builds advance
+  only the `-YYYYMMDD` segment; a numeric bump happens only on a wire-format change or
+  a release.
 - **`--version` and the startup banner come from one source.** clap receives the
   same composed string the banner prints, so the two exits cannot disagree. The
-  output carries the document revision, e.g. `ZT-DSP_SV-1.0.0 (docs 1.0.2)`.
+  output carries the document revision, e.g. `ISOSTRESS_SV-1.0.0 (docs 1.0.0)`.
   The clap `string` feature owns the value; no allocation is leaked for it.
-- **The conformance reference is the 1.0.2 guide.** `version.rs` declares
-  docs 1.0.2 and points at the published 1.0.2 file. `PROTOCOL-CONFORMANCE.md`
+- **The conformance reference is the 1.0.0 guide.** `version.rs` declares
+  docs 1.0.0 and points at the published 1.0.0 file. `PROTOCOL-CONFORMANCE.md`
   cites clauses (§1.3, §5.1) instead of line numbers, which drifted between
   document revisions; the least-privilege row previously named §4.2 while its
   cited line sits in §1.3 in both 1.0.1 and 1.0.2.
+- Development builds now carry the `-YYYYMMDD` segment in the implementation
+  identifier. `CODE_VERSION` stays `1.0.0`, `BUILD_ID` is
+  `ISOSTRESS_SV-1.0.0-20261030`, package metadata stays numeric-only, and the
+  compatibility lists keep the release form.
 - **The implementation is split into modules.** `src/main.rs` held every module
 inline as a convenience; each protocol surface now has its own file: `frame.rs`
 (Appendix F), `lobby.rs` (pairing), `silent.rs` (silent drop), `relay.rs` (byte
@@ -97,12 +120,12 @@ the version contract from `src/version.rs`.
   keeps the -v3 derivation-label convention in lockstep with the client.
 
 - **Source consolidated into a single file** (`src/main.rs`). The single-file collection
-  rule in `ZT-DSP-client/cn/README.md` is dropped: implementations follow the ordinary
+  rule in `isostress-client/cn/README.md` is dropped: implementations follow the ordinary
   engineering layout of the language in use. Module boundaries are kept as inline `mod`
   blocks, and their `pub` surface is narrowed accordingly.
 - **Version contract declared** in `src/main.rs` (`mod version`): `FOLLOWS_DOC`,
   `FOLLOWS_DOC_PATH`, `APPLIES_TO_DOC_VERSIONS`, plus `IMPLEMENTATION_ID` and
-  `format_version()`. The same shape as `zt_dsp_py/version.py` and `zt_dsp_rs/version.rs`,
+  `format_version()`. The same shape as `isostress_py/version.py` and `isostress_rs/version.rs`,
   with a role prefix (`SV`) instead of a language prefix. `--version` and the startup
   banner read from it.
 - **CI added** (`.github/workflows/ci.yml`): a matrix of native `ubuntu-24.04` and
