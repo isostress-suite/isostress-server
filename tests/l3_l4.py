@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (c) 2026 isostress Suite maintainers
 # 手动验收：静默丢弃 + L4 控制面（强制鉴权）。自动化回归见 tests/integration.rs。
 import json, socket, struct, subprocess, time, sys
 
@@ -7,7 +8,7 @@ PORT, CPORT = 17453, 17454
 TOKEN = 'test-token-please-rotate'
 
 def start():
-    p = subprocess.Popen(['./target/debug/zt-dsp-server',
+    p = subprocess.Popen(['./target/debug/isostress-server',
                           '--listen', f'127.0.0.1:{PORT}',
                           '--control', f'127.0.0.1:{CPORT}',
                           '--control-token', TOKEN,

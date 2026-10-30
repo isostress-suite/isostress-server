@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-// Copyright (c) 2026 ZT-DSP Suite contributors
+// Copyright (c) 2026 isostress Suite maintainers
 
 //! 配置 —— 对应规范附录 B.2 的服务器三档。
 //!
@@ -235,7 +235,7 @@ impl Config {
 
     /// 启动前校验：把「运行时静默改写成合法值」换成「启动时拒绝」。
     pub fn validate(&self) -> Result<(), String> {
-        // 无条件生效的项
+        // 对所有连接生效的项
         if self.handshake_timeout_secs == 0 {
             return Err("handshake_timeout_secs must be greater than zero".into());
         }

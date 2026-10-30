@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-// Copyright (c) 2026 ZT-DSP Suite contributors
+// Copyright (c) 2026 isostress Suite maintainers
 
 //! 严格静默丢弃（附录 F.2）—— 服务器侧的门禁行为。
 //!

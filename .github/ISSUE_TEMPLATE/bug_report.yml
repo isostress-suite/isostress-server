@@ -1,6 +1,21 @@
 name: Bug report
 description: The server has no implementation yet -- report only what actually exists
+labels: [bug]
 body:
+  - type: textarea
+    id: audience
+    attributes:
+      label: 谁受影响？
+      description: 谁会遇到这个问题，例如使用者、维护者、评审人
+    validations:
+      required: true
+  - type: textarea
+    id: if-skipped
+    attributes:
+      label: 不读会错过什么？
+      description: 漏掉哪条信息会导致什么后果，例如复现条件、版本、影响面
+    validations:
+      required: true
   - type: markdown
     attributes:
       value: |

@@ -2,12 +2,12 @@
 
 ## Supported versions
 
-`ZT-DSP_SV-1.0.0` is now an actual implementation. The data plane is the supported
+`ISOSTRESS_SV-1.0.0-20261030` is now an actual implementation. The data plane is the supported
 surface.
 
 | Version | Supported | Notes |
 |---|---|---|
-| `ZT-DSP_SV-1.0.0` | Yes | current |
+| `ISOSTRESS_SV-1.0.0-20261030` | Yes | current |
 
 ## Reporting a vulnerability
 

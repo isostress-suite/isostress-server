@@ -1,12 +1,12 @@
 # Control Plane API (L4 extension)
 
-> **This is not part of the ZT-DSP specification.** The specification defines only the peer-to-peer
+> **This is not part of the isostress specification.** The specification defines only the peer-to-peer
 > protocol. Offline delivery, multi-party groups and identity directories are listed in
 > the repository README as *intended* server capabilities but are not specified. This
 > document is the contract this implementation offers for them.
 
 The control plane listens on a **separate port** from the data plane. It never touches
-the ZT-DSP wire format. With it disabled (no `--control`), the server is a pure relay.
+the isostress wire format. With it disabled (no `--control`), the server is a pure relay.
 
 ## Transport
 

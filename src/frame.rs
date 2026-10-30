@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-// Copyright (c) 2026 ZT-DSP Suite contributors
+// Copyright (c) 2026 isostress Suite maintainers
 
 //! 附录 F 逐字节帧规范。
 //!

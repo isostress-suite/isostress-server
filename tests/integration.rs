@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-// Copyright (c) 2026 ZT-DSP Suite contributors
+// Copyright (c) 2026 isostress Suite maintainers
 
 //! 端到端集成测试：真起一个服务端进程，两客户端完成阶段一配对并互发字节。
 //!
@@ -42,7 +42,7 @@ impl Drop for Server {
 }
 
 fn start_server(port: u16) -> Server {
-    let child = Command::new(env!("CARGO_BIN_EXE_zt-dsp-server"))
+    let child = Command::new(env!("CARGO_BIN_EXE_isostress-server"))
         .args(["--listen", &format!("127.0.0.1:{port}")])
         .stdout(Stdio::null())
         .stderr(Stdio::null())
@@ -133,7 +133,7 @@ fn rejects_malformed_phase1_without_answering() {
 #[test]
 fn refuses_to_start_control_plane_without_token() {
     let port = free_port();
-    let out = Command::new(env!("CARGO_BIN_EXE_zt-dsp-server"))
+    let out = Command::new(env!("CARGO_BIN_EXE_isostress-server"))
         .args([
             "--listen",
             &format!("127.0.0.1:{port}"),

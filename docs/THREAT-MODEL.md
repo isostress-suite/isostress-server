@@ -1,6 +1,6 @@
 # Threat Model
 
-Scope: the operator of a ZT-DSP server, and anyone who can observe or influence its
+Scope: the operator of a isostress server, and anyone who can observe or influence its
 traffic. Clients and the TCA are out of scope.
 
 ## 1. What the operator cannot do

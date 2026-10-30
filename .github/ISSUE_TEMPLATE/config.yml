@@ -1,5 +1,5 @@
 blank_issues_enabled: false
 contact_links:
   - name: Report a security vulnerability
-    url: https://github.com/ZT-DSP-Suite/ZT-DSP-server/security/advisories/new
+    url: https://github.com/isostress-suite/isostress-server/security/advisories/new
     about: Requires "private vulnerability reporting" to be enabled on the repository.

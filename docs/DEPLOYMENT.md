@@ -22,7 +22,7 @@ cargo build --release --target x86_64-unknown-linux-gnu
 ## 2. Minimal run
 
 ```bash
-./zt-dsp-server --listen 0.0.0.0:7443
+./isostress-server --listen 0.0.0.0:7443
 ```
 
 Data plane only. No control plane, no storage, no state.
@@ -30,13 +30,15 @@ Data plane only. No control plane, no storage, no state.
 ## 3. Production run
 
 ```bash
-./zt-dsp-server \
+./isostress-server \
   --listen 0.0.0.0:7443 \
-  --control 127.0.0.1:7444 \
+  --control 127.0.0.1:<port> \
   --control-token "$(head -c 32 /dev/urandom | base64)" \
   --profile advanced \
-  --config /etc/zt-dsp/server.json
+  --config /etc/isostress/server.json
 ```
+
+`<port>` is chosen by the deployment or the implementation default; the example value is not a convention. The same applies to the unit file and the JSON below.
 
 The token is mandatory whenever `--control` is given; the process exits immediately
 otherwise. Keep the control plane on loopback unless you have a separate authenticated
@@ -50,7 +52,7 @@ connections directly, or raise `max_per_ip` deliberately.
 
 ```ini
 [Unit]
-Description=ZT-DSP server
+Description=isostress server
 After=network-online.target
 Wants=network-online.target
 
@@ -58,9 +60,9 @@ Wants=network-online.target
 Type=simple
 User=ztdsp
 Group=ztdsp
-ExecStart=/usr/local/bin/zt-dsp-server \
+ExecStart=/usr/local/bin/isostress-server \
     --listen 0.0.0.0:7443 \
-    --control 127.0.0.1:7444 \
+    --control 127.0.0.1:<port> \
     --profile advanced
 Environment=ZT_DSP_CONTROL_TOKEN=<long random secret>
 
@@ -98,7 +100,7 @@ WantedBy=multi-user.target
 ```json
 {
   "listen": "0.0.0.0:7443",
-  "control_listen": "127.0.0.1:7444",
+  "control_listen": "127.0.0.1:<port>",
   "profile": "advanced",
   "handshake_timeout_secs": 15,
   "lobby_timeout_secs": 30,
