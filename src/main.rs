@@ -236,6 +236,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             groups: Arc::clone(&groups),
             directory: Arc::clone(&directory),
             metrics: Arc::clone(&metrics),
+            // 三个超时都取自配置：控制面此前写死了 30 秒读超时与 50 毫秒退避，
+            // 而 config 里的 control_read_timeout_secs / control_write_timeout_secs
+            // / accept_backoff_ms 没有任何代码读取。
+            read_timeout: Duration::from_secs(cfg.control_read_timeout_secs),
+            write_timeout: Duration::from_secs(cfg.control_write_timeout_secs),
+            accept_backoff: Duration::from_millis(cfg.accept_backoff_ms),
             token,
         });
         tokio::spawn(async move {

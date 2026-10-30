@@ -26,8 +26,6 @@ use crate::util::{from_hex, parse_token_hash, to_hex};
 pub const MAX_LINE_BYTES: usize = 2 * 1024 * 1024;
 /// 控制面并发连接上限
 pub const MAX_CONTROL_CONNS: usize = 16;
-/// 读完一行请求的空闲超时
-pub const READ_TIMEOUT: Duration = Duration::from_secs(30);
 /// 单连接允许的鉴权失败次数
 pub const MAX_AUTH_FAILURES: u32 = 5;
 
@@ -37,6 +35,15 @@ pub struct ControlState {
     pub groups: Arc<Groups>,
     pub directory: Arc<Directory>,
     pub metrics: Arc<Metrics>,
+    /// 读完一行请求的空闲超时。取自 `Config::control_read_timeout_secs`。
+    pub read_timeout: Duration,
+    /// 写一条响应的超时。取自 `Config::control_write_timeout_secs`。
+    pub write_timeout: Duration,
+    /// accept 出错后的退避。取自 `Config::accept_backoff_ms`，与数据面同源。
+    ///
+    /// 没有它，EMFILE 之类的瞬时错误会让控制面 accept 循环满速重试，把一次
+    /// 资源耗尽变成一次 CPU 耗尽；数据面早已退避，控制面此前没有。
+    pub accept_backoff: Duration,
     /// 必填：没有口令就不启动控制面
     pub token: String,
 }
@@ -186,6 +193,9 @@ pub async fn serve(addr: SocketAddr, state: Arc<ControlState>) -> std::io::Resul
             Ok(v) => v,
             Err(err) => {
                 warn!(error = %err, "控制面 accept 失败");
+                // 不退避的后果是满速重试：一次 EMFILE 会变成一次 CPU 耗尽。
+                // 数据面的 accept 循环已经这么做了，控制面此前漏掉了。
+                tokio::time::sleep(state.accept_backoff).await;
                 continue;
             }
         };
@@ -218,7 +228,7 @@ async fn handle(stream: TcpStream, state: Arc<ControlState>) -> std::io::Result<
 
     loop {
         let read = tokio::time::timeout(
-            READ_TIMEOUT,
+            state.read_timeout,
             read_line_limited(&mut reader, MAX_LINE_BYTES, &mut line),
         )
         .await;
@@ -227,7 +237,7 @@ async fn handle(stream: TcpStream, state: Arc<ControlState>) -> std::io::Result<
             Err(_) => return Ok(()),
             Ok(Err(err)) => {
                 let r = Resp::err(format!("请求行非法: {err}"));
-                write_resp(&mut write_half, &r).await?;
+                write_resp(&mut write_half, &r, state.write_timeout).await?;
                 return Ok(());
             }
             Ok(Ok(None)) => return Ok(()),
@@ -240,7 +250,12 @@ async fn handle(stream: TcpStream, state: Arc<ControlState>) -> std::io::Result<
         let text = match std::str::from_utf8(&line) {
             Ok(t) => t.trim(),
             Err(_) => {
-                write_resp(&mut write_half, &Resp::err("请求不是合法 UTF-8")).await?;
+                write_resp(
+                    &mut write_half,
+                    &Resp::err("请求不是合法 UTF-8"),
+                    state.write_timeout,
+                )
+                .await?;
                 continue;
             }
         };
@@ -253,11 +268,20 @@ async fn handle(stream: TcpStream, state: Arc<ControlState>) -> std::io::Result<
             Ok(Req::Auth { token }) => {
                 if ct_eq(token.as_bytes(), state.token.as_bytes()) {
                     authed = true;
+                    // 成功一次就把失败预算还回去。不清零的话，一个先试错四次、
+                    // 再成功登录的运维脚本会在下一次手误时立刻被断开 —— 预算
+                    // 本该按「连续失败」计，而不是按连接生命周期累计。
+                    failures = 0;
                     Resp::ok(serde_json::json!({"authed": true}))
                 } else {
                     failures += 1;
                     if failures >= MAX_AUTH_FAILURES {
-                        write_resp(&mut write_half, &Resp::err("鉴权失败次数过多")).await?;
+                        write_resp(
+                            &mut write_half,
+                            &Resp::err("鉴权失败次数过多"),
+                            state.write_timeout,
+                        )
+                        .await?;
                         return Ok(());
                     }
                     Resp::err("鉴权失败")
@@ -267,11 +291,16 @@ async fn handle(stream: TcpStream, state: Arc<ControlState>) -> std::io::Result<
             Ok(req) => dispatch(req, &state),
         };
 
-        write_resp(&mut write_half, &resp).await?;
+        write_resp(&mut write_half, &resp, state.write_timeout).await?;
     }
 }
 
-async fn write_resp<W: tokio::io::AsyncWrite + Unpin>(w: &mut W, r: &Resp) -> std::io::Result<()> {
+/// 写一条响应。写超时取自配置：对端只连不读时，任务不能永久挂住。
+async fn write_resp<W: tokio::io::AsyncWrite + Unpin>(
+    w: &mut W,
+    r: &Resp,
+    timeout: Duration,
+) -> std::io::Result<()> {
     // 序列化失败不能静默替换成假响应：那会把内部错误伪装成服务端拒绝。
     let mut out = match serde_json::to_vec(r) {
         Ok(v) => v,
@@ -281,8 +310,17 @@ async fn write_resp<W: tokio::io::AsyncWrite + Unpin>(w: &mut W, r: &Resp) -> st
         }
     };
     out.push(b'\n');
-    w.write_all(&out).await?;
-    w.flush().await
+    tokio::time::timeout(timeout, async {
+        w.write_all(&out).await?;
+        w.flush().await
+    })
+    .await
+    .map_err(|_| {
+        std::io::Error::new(
+            std::io::ErrorKind::TimedOut,
+            "control response write timed out",
+        )
+    })?
 }
 
 fn dispatch(req: Req, state: &ControlState) -> Resp {
